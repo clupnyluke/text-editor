@@ -13,7 +13,6 @@ use super::{screen, IOResult};
 pub struct Terminal {
     virtual_cursor: (usize, usize),
     virtual_position: (usize, usize),
-    virtual_size: (usize, usize),
 }
 
 impl Default for Terminal {
@@ -21,7 +20,6 @@ impl Default for Terminal {
         Terminal {
             virtual_cursor: (0, 0),
             virtual_position: (0, 0),
-            virtual_size: (0, 0),
         }
     }
 }
