@@ -1,9 +1,10 @@
 use crossterm::cursor::{
-    position, MoveDown, MoveLeft, MoveRight, MoveTo, MoveToColumn, MoveUp, SetCursorStyle,
+    position, MoveDown, MoveLeft, MoveRight, MoveTo, MoveToColumn, MoveUp, RestorePosition,
+    SavePosition, SetCursorStyle,
 };
 use crossterm::event::{read, Event, KeyCode, KeyEvent, KeyModifiers};
 use crossterm::terminal::{
-    disable_raw_mode, enable_raw_mode, Clear, ClearType, DisableLineWrap, EnableLineWrap,
+    disable_raw_mode, enable_raw_mode, size, Clear, ClearType, DisableLineWrap, EnableLineWrap,
 };
 use crossterm::{execute, queue};
 use std::io::stdout;
@@ -45,9 +46,11 @@ impl Controller {
             }
             EditorMode::Control => {
                 execute!(stdout(), SetCursorStyle::BlinkingBlock)?;
+                self.command_text.clear();
             }
             EditorMode::Command => {
-                let (x, y) = position()?;
+                queue!(stdout(), SavePosition, SetCursorStyle::BlinkingBar)?;
+                screen::update_command_text(&self.command_text)?;
             }
         }
         Ok(())
@@ -83,7 +86,7 @@ impl Controller {
                 match self.mode {
                     EditorMode::Insert => self.handle_input_insert_mode(buffer, event)?,
                     EditorMode::Control => self.handle_input_control_mode(buffer, event)?,
-                    EditorMode::Command => self.handle_input_command_mode(event)?,
+                    EditorMode::Command => self.handle_input_command_mode(buffer, event)?,
                 }
             }
         }
@@ -174,7 +177,11 @@ impl Controller {
                     execute!(stdout(), MoveRight(1))?;
                     self.set_mode(EditorMode::Insert)?;
                 }
-                ':' | '\\' => self.set_mode(EditorMode::Command)?,
+                ':' | '\\' => {
+                    self.command_text.insert(0, char);
+                    self.set_mode(EditorMode::Command)?;
+                }
+
                 _ => (),
             },
             _ => (),
@@ -182,7 +189,39 @@ impl Controller {
         Ok(())
     }
 
-    fn handle_input_command_mode(&mut self, event: KeyEvent) -> Result<(), std::io::Error> {
+    fn handle_input_command_mode(&mut self, buffer: &mut Buffer, event: KeyEvent) -> IOResult {
+        match event.code {
+            KeyCode::Char(char) => {
+                self.command_text.insert(self.command_text.len(), char);
+                screen::update_command_text(&self.command_text)?;
+            }
+            KeyCode::Delete => {
+                let (x, _y) = position()?;
+                if (x as usize) < self.command_text.len() {
+                    self.command_text.remove(x as usize);
+                    screen::update_command_text(&self.command_text)?;
+                }
+                if self.command_text.len() == 0 {
+                    self.exit_command_mode(buffer)?;
+                }
+            }
+            KeyCode::Backspace => {
+                let (x, _y) = position()?;
+                if x as i32 - 1 < 0 {
+                    return Ok(());
+                }
+                queue!(stdout(), MoveLeft(1))?;
+                self.command_text.remove((x as usize) - 1);
+                screen::update_command_text(&self.command_text)?;
+                if self.command_text.len() == 0 {
+                    self.exit_command_mode(buffer)?;
+                }
+            }
+            KeyCode::Enter => {
+                //EXECUTE
+            }
+            _ => (),
+        }
         Ok(())
     }
 
@@ -195,7 +234,14 @@ impl Controller {
         Ok(())
     }
 
-    pub fn terminate(&mut self) -> Result<(), std::io::Error> {
+    fn exit_command_mode(&mut self, buffer: &Buffer) -> IOResult {
+        self.set_mode(EditorMode::Control)?;
+        execute!(stdout(), RestorePosition, SetCursorStyle::BlinkingBlock)?;
+        screen::update_line(buffer, size()?.1)?;
+        Ok(())
+    }
+
+    pub fn terminate(&mut self) -> IOResult {
         execute!(stdout(), EnableLineWrap)?;
         disable_raw_mode()?;
         Ok(())
