@@ -12,8 +12,8 @@ pub fn update_line(buffer: &Buffer, line_number: u16) -> IOResult {
     Terminal::clear_line_with_cursor()?;
     let default = String::new();
     if (line_number as usize) < buffer.len() {
-    let line = buffer.get_line(line_number).unwrap_or(&default);
-    print!("{line}");
+        let line = buffer.get_line(line_number).unwrap_or(&default);
+        print!("{line}");
     } else {
         print!("~");
     }
@@ -43,6 +43,15 @@ pub fn update_line_until_eof(buffer: &Buffer, line_number: u16) -> IOResult {
     }
 
     queue!(stdout(), RestorePosition)?;
+    stdout().flush()?;
+    Ok(())
+}
+
+pub fn update_command_text(command_text: &String) -> IOResult {
+    let (_, eof) = Terminal::size()?;
+    queue!(stdout(), MoveTo(0, eof))?;
+    Terminal::clear_from_cursor_down()?;
+    print!("{command_text}");
     stdout().flush()?;
     Ok(())
 }
