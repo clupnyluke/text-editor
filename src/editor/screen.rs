@@ -11,8 +11,8 @@ pub fn update_line(buffer: &Buffer, line_number: u16) -> IOResult {
     queue!(
         stdout(),
         SavePosition,
+        MoveTo(0, line_number),
         Clear(ClearType::CurrentLine),
-        MoveTo(0, line_number)
     )?;
     let default = String::new();
     let line = buffer.get_line(line_number).unwrap_or(&default);
