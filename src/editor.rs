@@ -1,5 +1,6 @@
 use buffer::Buffer;
 use controller::Controller;
+use terminal::Terminal;
 
 mod buffer;
 mod controller;
@@ -10,6 +11,7 @@ type IOResult = Result<(), std::io::Error>;
 
 pub struct Editor<'a> {
     buffer: Buffer<'a>,
+    terminal: Terminal,
     controller: Controller,
 }
 
@@ -17,6 +19,7 @@ impl<'a> Default for Editor<'a> {
     fn default() -> Self {
         Editor {
             buffer: Buffer::new(),
+            terminal: Terminal::new(),
             controller: Controller::new(),
         }
     }
@@ -38,9 +41,10 @@ impl<'a> Editor<'a> {
     }
 
     fn repl(&mut self) -> IOResult {
+        Terminal::init()?;
         self.controller.init(&self.buffer)?;
         self.controller.handle_input(&mut self.buffer)?;
-        self.controller.terminate()?;
+        Terminal::clean_up()?;
         Ok(())
     }
 }

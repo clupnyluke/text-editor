@@ -2,14 +2,9 @@ use crossterm::cursor::{
     position, MoveDown, MoveLeft, MoveRight, MoveTo, MoveUp, RestorePosition, SavePosition,
     SetCursorStyle,
 };
-use crossterm::terminal::{
-    disable_raw_mode, enable_raw_mode, Clear, ClearType, DisableLineWrap, EnableLineWrap,
-};
 
-use std::io::{stdout, Read, Stdout, Write};
-use std::ops::{Range, RangeFrom};
-use std::rc::Rc;
-use std::slice::SliceIndex;
+use std::io::{stdout, Read};
+use std::ops::RangeFrom;
 
 use crossterm::QueueableCommand;
 

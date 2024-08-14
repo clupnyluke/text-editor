@@ -3,13 +3,11 @@ use crossterm::cursor::{
     SavePosition, SetCursorStyle,
 };
 use crossterm::event::{read, Event, KeyCode, KeyEvent, KeyModifiers};
-use crossterm::terminal::{
-    disable_raw_mode, enable_raw_mode, size, Clear, ClearType, DisableLineWrap, EnableLineWrap,
-};
 use crossterm::{execute, queue};
 use std::io::stdout;
 
 use super::buffer::Buffer;
+use super::terminal::Terminal;
 use super::{screen, IOResult};
 
 enum EditorMode {
@@ -57,16 +55,9 @@ impl Controller {
     }
 
     pub fn init(&mut self, buffer: &Buffer) -> IOResult {
-        queue!(
-            stdout(),
-            Clear(ClearType::All),
-            DisableLineWrap,
-            SetCursorStyle::BlinkingBlock
-        )?;
         screen::update_line_until_eof(buffer, 0)?;
         execute!(stdout(), MoveTo(0, 0))?;
 
-        enable_raw_mode()?;
         Ok(())
     }
 
@@ -237,13 +228,7 @@ impl Controller {
     fn exit_command_mode(&mut self, buffer: &Buffer) -> IOResult {
         self.set_mode(EditorMode::Control)?;
         execute!(stdout(), RestorePosition, SetCursorStyle::BlinkingBlock)?;
-        screen::update_line(buffer, size()?.1)?;
-        Ok(())
-    }
-
-    pub fn terminate(&mut self) -> IOResult {
-        execute!(stdout(), EnableLineWrap)?;
-        disable_raw_mode()?;
+        screen::update_line(buffer, Terminal::size()?.1)?;
         Ok(())
     }
 }

@@ -1,19 +1,15 @@
 use std::io::{stdout, Write};
 
 use crossterm::cursor::{position, MoveTo, MoveToColumn, RestorePosition, SavePosition};
-use crossterm::terminal::{Clear, ClearType};
 use crossterm::{execute, queue};
 
 use super::buffer::Buffer;
+use super::terminal::Terminal;
 use super::IOResult;
 
 pub fn update_line(buffer: &Buffer, line_number: u16) -> IOResult {
-    queue!(
-        stdout(),
-        SavePosition,
-        MoveTo(0, line_number),
-        Clear(ClearType::CurrentLine),
-    )?;
+    queue!(stdout(), SavePosition, MoveTo(0, line_number))?;
+    Terminal::clear_line_with_cursor()?;
     let default = String::new();
     let line = buffer.get_line(line_number).unwrap_or(&default);
     print!("{line}");
@@ -27,13 +23,8 @@ pub fn update_current_line(buffer: &Buffer) -> IOResult {
 }
 
 pub fn update_line_until_eof(buffer: &Buffer, line_number: u16) -> IOResult {
-    queue!(
-        stdout(),
-        SavePosition,
-        MoveTo(0, line_number),
-        Clear(ClearType::CurrentLine),
-        Clear(ClearType::FromCursorDown)
-    )?;
+    queue!(stdout(), SavePosition, MoveTo(0, line_number),)?;
+    Terminal::clear_from_cursor_down()?;
     let default = vec![String::new()];
     let lines = buffer.get_lines(line_number as usize..).unwrap_or(&default);
     for line in lines {
