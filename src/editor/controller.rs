@@ -152,32 +152,22 @@ impl Controller {
         match event.code {
             KeyCode::Char(char) => match char {
                 'h' => {
-                    if x > 0 {
-                        execute!(stdout(), MoveLeft(1))?;
-                    }
+                    terminal.move_left(buffer)?;
                 }
                 'j' => {
-                    if (y) < buffer.len() - 1 {
-                        execute!(stdout(), MoveDown(1))?;
-                        self.snap_to_line_end(buffer)?;
-                    }
+                    terminal.move_down(buffer)?;
                 }
                 'k' => {
-                    if y > 0 {
-                        execute!(stdout(), MoveUp(1))?;
-                        self.snap_to_line_end(buffer)?;
-                    }
+                    terminal.move_up(buffer)?;
                 }
                 'l' => {
-                    if (x) < usize::max(buffer.get_line(y).unwrap_or(&String::new()).len(), 1) - 1 {
-                        execute!(stdout(), MoveRight(1))?;
-                    }
+                    terminal.move_right(buffer)?;
                 }
                 'i' => {
                     self.set_mode(EditorMode::Insert)?;
                 }
                 'a' => {
-                    execute!(stdout(), MoveRight(1))?;
+                    terminal.move_right_for_insert(buffer)?;
                     self.set_mode(EditorMode::Insert)?;
                 }
                 ':' | '\\' => {
