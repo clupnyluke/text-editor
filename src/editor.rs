@@ -42,8 +42,9 @@ impl<'a> Editor<'a> {
 
     fn repl(&mut self) -> IOResult {
         Terminal::init()?;
-        self.controller.init(&self.buffer)?;
-        self.controller.handle_input(&mut self.buffer)?;
+        self.controller.init(&self.buffer, &self.terminal)?;
+        self.controller
+            .handle_input(&mut self.buffer, &mut self.terminal)?;
         Terminal::clean_up()?;
         Ok(())
     }

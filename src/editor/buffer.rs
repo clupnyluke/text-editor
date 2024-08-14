@@ -1,13 +1,10 @@
-use crossterm::cursor::{
-    position, MoveDown, MoveLeft, MoveRight, MoveTo, MoveUp, RestorePosition, SavePosition,
-    SetCursorStyle,
-};
+use crossterm::cursor::MoveRight;
 
 use std::io::{stdout, Read};
-use std::ops::RangeFrom;
 
 use crossterm::QueueableCommand;
 
+use super::terminal::Terminal;
 use super::{screen, IOResult};
 
 pub struct Buffer<'a> {
@@ -44,56 +41,54 @@ impl<'a> Buffer<'a> {
         Ok(())
     }
 
-    pub fn get_contents(&self) -> &Vec<String> {
-        &self.contents
+    pub fn get_line(&self, i: usize) -> Option<&String> {
+        self.contents.get(i)
     }
 
-    pub fn get_line(&self, i: u16) -> Option<&String> {
-        self.contents.get(i as usize)
+    pub fn get_line_mut(&mut self, i: usize) -> Option<&mut String> {
+        self.contents.get_mut(i)
     }
 
-    pub fn get_line_mut(&mut self, i: u16) -> Option<&mut String> {
-        self.contents.get_mut(i as usize)
-    }
-
-    pub fn insert_char_on_line(&mut self, char: char, row: u16, column: u16) -> IOResult {
+    pub fn insert_char_on_line(
+        &mut self,
+        terminal: &mut Terminal,
+        char: char,
+        row: usize,
+        column: usize,
+    ) -> IOResult {
         let line = self.get_line_mut(row).unwrap();
         (*line).insert(column as usize, char);
         stdout().queue(MoveRight(1))?;
-        screen::update_line(self, row)?;
+        screen::update_line(self, terminal, row)?;
         Ok(())
     }
 
-    pub fn delete_char_on_line(&mut self, row: u16, column: u16) -> IOResult {
-        let len = self.len();
+    pub fn delete_char_on_line(
+        &mut self,
+        terminal: &Terminal,
+        row: usize,
+        column: usize,
+    ) -> IOResult {
         let line = self.get_line_mut(row).unwrap();
         (*line).remove(column as usize);
-        screen::update_current_line(&self)?;
+        screen::update_current_line(&self, terminal)?;
         Ok(())
     }
 
-    pub fn get_lines(&self, range: RangeFrom<usize>) -> Option<&[String]> {
-        self.contents.get(range)
-    }
-
-    pub fn get_lines_mut(&mut self, range: RangeFrom<usize>) -> Option<&mut [String]> {
-        self.contents.get_mut(range)
-    }
-
-    pub fn delete_line(&mut self, i: u16) {
+    pub fn delete_line(&mut self, i: usize) {
         self.contents
             .splice(i as usize..i as usize + 1, [])
             .for_each(drop);
     }
 
-    pub fn move_line_contents_up_one_row(&mut self, i: u16) {
+    pub fn move_line_contents_up_one_row(&mut self, i: usize) {
         let line = self.get_line(i).unwrap();
         let append_str = line.clone();
         let line_upper = self.get_line_mut(i - 1).unwrap();
         (*line_upper).push_str(append_str.as_str());
     }
 
-    pub fn insert_line(&mut self, i: u16, contents: String) {
+    pub fn insert_line(&mut self, i: usize, contents: String) {
         self.contents.insert(i as usize, contents);
     }
 

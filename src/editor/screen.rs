@@ -36,7 +36,7 @@ pub fn update_line_until_eof(buffer: &Buffer, terminal: &Terminal, line_number: 
     if line_number >= term_y && line_number <= term_y + height as usize {
         queue!(stdout(), SavePosition)?;
         Terminal::cursor_to(0, line_number - term_y)?;
-    Terminal::clear_from_cursor_down()?;
+        Terminal::clear_from_cursor_down()?;
         let default = String::from("~");
         for line_number in line_number..term_y + height {
             let line = buffer.get_line(line_number).unwrap_or(&default);
@@ -47,17 +47,17 @@ pub fn update_line_until_eof(buffer: &Buffer, terminal: &Terminal, line_number: 
                 println!("{text}");
             }
             Terminal::cursor_to_beginning_of_line()?;
-    }
-    queue!(stdout(), RestorePosition)?;
-    stdout().flush()?;
+        }
+        queue!(stdout(), RestorePosition)?;
+        stdout().flush()?;
     }
     Ok(())
 }
 
 pub fn update_command_text(command_text: &String) -> IOResult {
     let (_, eof) = Terminal::size()?;
-    queue!(stdout(), MoveTo(0, eof))?;
-    Terminal::clear_from_cursor_down()?;
+    queue!(stdout(), MoveTo(0, eof as u16))?;
+    Terminal::clear_line_with_cursor()?;
     print!("{command_text}");
     stdout().flush()?;
     Ok(())
