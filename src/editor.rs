@@ -4,6 +4,9 @@ use controller::Controller;
 mod buffer;
 mod controller;
 mod screen;
+mod terminal;
+
+type IOResult = Result<(), std::io::Error>;
 
 pub struct Editor<'a> {
     buffer: Buffer<'a>,
@@ -34,7 +37,7 @@ impl<'a> Editor<'a> {
         }
     }
 
-    fn repl(&mut self) -> Result<(), std::io::Error> {
+    fn repl(&mut self) -> IOResult {
         self.controller.init(&self.buffer)?;
         self.controller.handle_input(&mut self.buffer)?;
         self.controller.terminate()?;

@@ -13,7 +13,7 @@ use std::slice::SliceIndex;
 
 use crossterm::QueueableCommand;
 
-use super::screen;
+use super::{screen, IOResult};
 
 pub struct Buffer<'a> {
     contents: Vec<String>,
@@ -34,7 +34,7 @@ impl<'a> Buffer<'a> {
         Buffer::default()
     }
 
-    pub fn read_file(&mut self, file: Option<&'a String>) -> Result<(), std::io::Error> {
+    pub fn read_file(&mut self, file: Option<&'a String>) -> IOResult {
         self.file_path = file;
         if let Some(path) = file {
             let mut contents = String::new();
@@ -61,12 +61,7 @@ impl<'a> Buffer<'a> {
         self.contents.get_mut(i as usize)
     }
 
-    pub fn insert_char_on_line(
-        &mut self,
-        char: char,
-        row: u16,
-        column: u16,
-    ) -> Result<(), std::io::Error> {
+    pub fn insert_char_on_line(&mut self, char: char, row: u16, column: u16) -> IOResult {
         let line = self.get_line_mut(row).unwrap();
         (*line).insert(column as usize, char);
         stdout().queue(MoveRight(1))?;
@@ -74,7 +69,7 @@ impl<'a> Buffer<'a> {
         Ok(())
     }
 
-    pub fn delete_char_on_line(&mut self, row: u16, column: u16) -> Result<(), std::io::Error> {
+    pub fn delete_char_on_line(&mut self, row: u16, column: u16) -> IOResult {
         let len = self.len();
         let line = self.get_line_mut(row).unwrap();
         (*line).remove(column as usize);

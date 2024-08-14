@@ -9,7 +9,7 @@ use crossterm::{execute, queue};
 use std::io::stdout;
 
 use super::buffer::Buffer;
-use super::screen;
+use super::{screen, IOResult};
 
 enum EditorMode {
     Insert,
@@ -37,7 +37,7 @@ impl Controller {
         Controller::default()
     }
 
-    fn set_mode(&mut self, mode: EditorMode) -> Result<(), std::io::Error> {
+    fn set_mode(&mut self, mode: EditorMode) -> IOResult {
         self.mode = mode;
         match self.mode {
             EditorMode::Insert => {
@@ -53,7 +53,7 @@ impl Controller {
         Ok(())
     }
 
-    pub fn init(&mut self, buffer: &Buffer) -> Result<(), std::io::Error> {
+    pub fn init(&mut self, buffer: &Buffer) -> IOResult {
         queue!(
             stdout(),
             Clear(ClearType::All),
@@ -67,7 +67,7 @@ impl Controller {
         Ok(())
     }
 
-    pub fn handle_input(&mut self, buffer: &mut Buffer) -> Result<(), std::io::Error> {
+    pub fn handle_input(&mut self, buffer: &mut Buffer) -> IOResult {
         loop {
             if self.should_quit {
                 break;
@@ -90,11 +90,7 @@ impl Controller {
         Ok(())
     }
 
-    fn handle_input_insert_mode(
-        &mut self,
-        buffer: &mut Buffer,
-        event: KeyEvent,
-    ) -> Result<(), std::io::Error> {
+    fn handle_input_insert_mode(&mut self, buffer: &mut Buffer, event: KeyEvent) -> IOResult {
         let (x, y) = position()?;
         match event.code {
             KeyCode::Char(char) => buffer.insert_char_on_line(char, y, x)?,
@@ -143,11 +139,7 @@ impl Controller {
         Ok(())
     }
 
-    fn handle_input_control_mode(
-        &mut self,
-        buffer: &mut Buffer,
-        event: KeyEvent,
-    ) -> Result<(), std::io::Error> {
+    fn handle_input_control_mode(&mut self, buffer: &mut Buffer, event: KeyEvent) -> IOResult {
         let (x, y) = position()?;
         match event.code {
             KeyCode::Char(char) => match char {
@@ -194,7 +186,7 @@ impl Controller {
         Ok(())
     }
 
-    fn snap_to_line_end(&self, buffer: &mut Buffer) -> Result<(), std::io::Error> {
+    fn snap_to_line_end(&self, buffer: &mut Buffer) -> IOResult {
         let (x, y) = position()?;
         let line_end = u16::max(buffer.get_line(y).unwrap().len() as u16, 1);
         if x > line_end - 1 {

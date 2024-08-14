@@ -16,7 +16,7 @@ pub fn print_all(buffer: &Buffer) -> Result<(), std::io::Error> {
     Ok(())
 }
 
-pub fn update_line(buffer: &Buffer, line_number: u16) -> Result<(), std::io::Error> {
+pub fn update_line(buffer: &Buffer, line_number: u16) -> IOResult {
     queue!(
         stdout(),
         SavePosition,
@@ -31,11 +31,11 @@ pub fn update_line(buffer: &Buffer, line_number: u16) -> Result<(), std::io::Err
     Ok(())
 }
 
-pub fn update_current_line(buffer: &Buffer) -> Result<(), std::io::Error> {
+pub fn update_current_line(buffer: &Buffer) -> IOResult {
     update_line(buffer, position()?.1)
 }
 
-pub fn update_line_until_eof(buffer: &Buffer, line_number: u16) -> Result<(), std::io::Error> {
+pub fn update_line_until_eof(buffer: &Buffer, line_number: u16) -> IOResult {
     queue!(
         stdout(),
         SavePosition,
