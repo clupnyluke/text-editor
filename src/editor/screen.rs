@@ -5,16 +5,7 @@ use crossterm::terminal::{Clear, ClearType};
 use crossterm::{execute, queue};
 
 use super::buffer::Buffer;
-
-pub fn print_all(buffer: &Buffer) -> Result<(), std::io::Error> {
-    execute!(stdout(), MoveTo(0, 0))?;
-    for line in buffer.get_contents() {
-        println!("{line}");
-        queue!(stdout(), MoveToColumn(0))?;
-    }
-    stdout().flush()?;
-    Ok(())
-}
+use super::IOResult;
 
 pub fn update_line(buffer: &Buffer, line_number: u16) -> IOResult {
     queue!(

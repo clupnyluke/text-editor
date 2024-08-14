@@ -63,7 +63,7 @@ impl Controller {
             DisableLineWrap,
             SetCursorStyle::BlinkingBlock
         )?;
-        screen::print_all(buffer)?;
+        screen::update_line_until_eof(buffer, 0)?;
         execute!(stdout(), MoveTo(0, 0))?;
 
         enable_raw_mode()?;
