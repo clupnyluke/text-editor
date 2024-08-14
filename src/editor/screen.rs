@@ -40,7 +40,10 @@ pub fn update_line_until_eof(buffer: &Buffer, terminal: &Terminal, line_number: 
         let default = String::from("~");
         for line_number in line_number..term_y + height {
             let line = buffer.get_line(line_number).unwrap_or(&default);
-            let text = &line[term_x..usize::min(term_x + width as usize, line.len())];
+            let mut text = "";
+            if term_x <= line.len() {
+                text = &line[term_x..usize::min(term_x + width as usize, line.len())];
+            }
             if line_number == term_y + height - 1 {
                 print!("{text}");
             } else {
