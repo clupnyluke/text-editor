@@ -1,7 +1,4 @@
-use crossterm::cursor::{
-    MoveDown, MoveLeft, MoveRight, MoveTo, MoveToColumn, MoveUp, RestorePosition, SavePosition,
-    SetCursorStyle,
-};
+use crossterm::cursor::{MoveLeft, RestorePosition, SavePosition, SetCursorStyle};
 use crossterm::event::{read, Event, KeyCode, KeyEvent, KeyModifiers};
 use crossterm::{execute, queue};
 use std::io::stdout;
@@ -148,7 +145,6 @@ impl Controller {
         terminal: &mut Terminal,
         event: KeyEvent,
     ) -> IOResult {
-        let (x, y) = Terminal::cursor_position()?;
         match event.code {
             KeyCode::Char(char) => match char {
                 'h' => {
@@ -219,15 +215,6 @@ impl Controller {
                 //EXECUTE
             }
             _ => (),
-        }
-        Ok(())
-    }
-
-    fn snap_to_line_end(&self, buffer: &mut Buffer) -> IOResult {
-        let (x, y) = Terminal::cursor_position()?;
-        let line_end = usize::max(buffer.get_line(y as usize).unwrap().len(), 1);
-        if x > line_end - 1 {
-            execute!(stdout(), MoveTo(line_end as u16 - 1, y as u16))?
         }
         Ok(())
     }

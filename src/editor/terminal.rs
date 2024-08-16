@@ -64,11 +64,6 @@ impl Terminal {
         Ok((x as usize, y as usize))
     }
 
-    pub fn clear_all() -> IOResult {
-        execute!(stdout(), Clear(ClearType::All))?;
-        Ok(())
-    }
-
     pub fn clear_from_cursor_down() -> IOResult {
         execute!(stdout(), Clear(ClearType::FromCursorDown))?;
         Ok(())

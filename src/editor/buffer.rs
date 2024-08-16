@@ -1,8 +1,4 @@
-use crossterm::cursor::MoveRight;
-
-use std::io::{stdout, Read};
-
-use crossterm::QueueableCommand;
+use std::fs;
 
 use super::terminal::Terminal;
 use super::{screen, IOResult};
