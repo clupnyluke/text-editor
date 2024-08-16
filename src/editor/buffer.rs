@@ -71,7 +71,19 @@ impl<'a> Buffer<'a> {
         row: usize,
         column: usize,
     ) -> IOResult {
+        if row > self.len() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Row doesn't exist",
+            ));
+        }
         let line = self.get_line_mut(row).unwrap();
+        if column > line.len() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Column out of Bounds",
+            ));
+        }
         (*line).insert(column as usize, char);
         stdout().queue(MoveRight(1))?;
         screen::update_line(self, terminal, row)?;
@@ -84,27 +96,63 @@ impl<'a> Buffer<'a> {
         row: usize,
         column: usize,
     ) -> IOResult {
+        if row > self.len() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Row doesn't exist",
+            ));
+        }
         let line = self.get_line_mut(row).unwrap();
+        if column > line.len() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Column out of Bounds",
+            ));
+        }
         (*line).remove(column as usize);
         screen::update_current_line(&self, terminal)?;
         Ok(())
     }
 
-    pub fn delete_line(&mut self, i: usize) {
-        self.contents
-            .splice(i as usize..i as usize + 1, [])
-            .for_each(drop);
+    pub fn delete_line(&mut self, row: usize) -> IOResult {
+        if row > self.len() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Row doesn't exist",
+            ));
+        }
+        self.contents.splice(row..row + 1, []).for_each(drop);
+        Ok(())
     }
 
-    pub fn move_line_contents_up_one_row(&mut self, i: usize) {
-        let line = self.get_line(i).unwrap();
+    pub fn move_line_contents_up_one_row(&mut self, row: usize) -> IOResult {
+        if row > self.len() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Row doesn't exist",
+            ));
+        }
+        if row == 0 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Top Row can't be moved up",
+            ));
+        }
+        let line = self.get_line(row).unwrap();
         let append_str = line.clone();
         let line_upper = self.get_line_mut(i - 1).unwrap();
         (*line_upper).push_str(append_str.as_str());
     }
 
-    pub fn insert_line(&mut self, i: usize, contents: String) {
-        self.contents.insert(i as usize, contents);
+    pub fn insert_line(&mut self, row: usize, contents: String) -> IOResult {
+        if row > self.len() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Out of Bounds",
+            ));
+        }
+        self.contents.insert(row as usize, contents);
+        Ok(())
     }
 
     pub fn len(&self) -> usize {
