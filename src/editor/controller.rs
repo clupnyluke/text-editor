@@ -137,6 +137,10 @@ impl Controller {
                 queue!(stdout(), MoveDown(1), MoveToColumn(0))?;
                 screen::update_line_until_eof(&buffer, terminal, y)?;
             }
+            KeyCode::Down => terminal.move_down(buffer)?,
+            KeyCode::Up => terminal.move_up(buffer)?,
+            KeyCode::Left => terminal.move_left(buffer)?,
+            KeyCode::Right => terminal.move_right_for_insert(buffer)?,
             _ => (),
         }
         Ok(())
@@ -176,6 +180,10 @@ impl Controller {
 
                 _ => (),
             },
+            KeyCode::Down => terminal.move_down(buffer)?,
+            KeyCode::Up => terminal.move_up(buffer)?,
+            KeyCode::Left => terminal.move_left(buffer)?,
+            KeyCode::Right => terminal.move_right_for_insert(buffer)?,
             _ => (),
         }
         Ok(())
