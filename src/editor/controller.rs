@@ -67,6 +67,9 @@ impl Controller {
                 if KeyCode::Char('q') == event.code && event.modifiers == KeyModifiers::CONTROL {
                     self.should_quit = true;
                 }
+                if KeyCode::Char('s') == event.code && event.modifiers == KeyModifiers::CONTROL {
+                    buffer.write_file(None)?;
+                }
                 if KeyCode::Esc == event.code {
                     self.set_mode(EditorMode::Control)?;
                 }

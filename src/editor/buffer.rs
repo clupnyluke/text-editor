@@ -37,6 +37,25 @@ impl<'a> Buffer<'a> {
         Ok(())
     }
 
+    fn write_to_file(&self, file_path: &String) -> IOResult {
+        fs::write(file_path, self.contents.join("\n"))?;
+        Ok(())
+    }
+
+    pub fn write_file(&self, file_path: Option<&String>) -> IOResult {
+        if let Some(path) = file_path {
+            self.write_to_file(path)?;
+        } else if let Some(path) = self.file_path {
+            self.write_to_file(path)?;
+        } else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "No file to write to",
+            ));
+        }
+        Ok(())
+    }
+
     pub fn get_line(&self, i: usize) -> Option<&String> {
         self.contents.get(i)
     }
