@@ -51,10 +51,9 @@ impl Controller {
         Ok(())
     }
 
-    pub fn init(&mut self, buffer: &Buffer, terminal: &Terminal) -> IOResult {
+    pub fn init(&mut self, buffer: &Buffer, terminal: &mut Terminal) -> IOResult {
+        terminal.goto(buffer, 0, 0)?;
         screen::update_line_until_eof(buffer, terminal, 0)?;
-        execute!(stdout(), MoveTo(0, 0))?;
-
         Ok(())
     }
 
@@ -94,7 +93,7 @@ impl Controller {
         terminal: &mut Terminal,
         event: KeyEvent,
     ) -> IOResult {
-        let (x, y) = Terminal::cursor_position()?;
+        let (x, y) = terminal.virtual_cursor();
         match event.code {
             KeyCode::Char(char) => buffer.insert_char_on_line(terminal, char, y, x)?,
             KeyCode::Delete => {
@@ -103,9 +102,8 @@ impl Controller {
                     return Ok(());
                 }
                 if x >= line.len() {
-                    // DELETE AT END OF LINE AND NOT AT EOF
-                    buffer.move_line_contents_up_one_row(y + 1);
-                    buffer.delete_line(y + 1);
+                    buffer.move_line_contents_up_one_row(y + 1)?;
+                    buffer.delete_line(y + 1)?;
                     screen::update_line_until_eof(buffer, terminal, y)?;
                 } else {
                     buffer.delete_char_on_line(terminal, y, x)?;
@@ -113,29 +111,27 @@ impl Controller {
                 ()
             }
             KeyCode::Backspace => {
-                if x as i32 - 1 < 0 && y == 0 {
+                if x < 1 {
+                    if y == 0 {
                     return Ok(());
                 }
-                if x as i32 - 1 < 0 {
-                    // BACKSPACE AT BEGINNING OF LINE AND NOT AT START OF FILE
-                    queue!(
-                        stdout(),
-                        MoveTo(buffer.get_line(y - 1).unwrap().len() as u16, y as u16 - 1)
-                    )?;
-                    buffer.move_line_contents_up_one_row(y);
-                    buffer.delete_line(y);
+                    terminal.goto(buffer, buffer.get_line(y - 1).unwrap().len(), y)?;
+                    buffer.move_line_contents_up_one_row(y)?;
+                    buffer.delete_line(y)?;
+                    terminal.move_up(buffer)?;
                     screen::update_line_until_eof(buffer, terminal, y - 1)?;
                 } else {
-                    queue!(stdout(), MoveLeft(1))?;
+                    terminal.move_left(buffer)?;
                     buffer.delete_char_on_line(terminal, y, x - 1)?;
                 }
             }
             KeyCode::Enter => {
                 let line = buffer.get_line_mut(y).unwrap();
                 let append_line = line.split_off(x);
-                buffer.insert_line(y + 1, append_line);
-                queue!(stdout(), MoveDown(1), MoveToColumn(0))?;
-                screen::update_line_until_eof(&buffer, terminal, y)?;
+                buffer.insert_line(y + 1, append_line)?;
+                terminal.move_down(buffer)?;
+                terminal.goto_beginning_of_line(buffer)?;
+                screen::update_line_until_eof(buffer, terminal, y)?;
             }
             KeyCode::Down => terminal.move_down(buffer)?,
             KeyCode::Up => terminal.move_up(buffer)?,
@@ -174,6 +170,7 @@ impl Controller {
                     self.set_mode(EditorMode::Insert)?;
                 }
                 ':' | '\\' => {
+                    self.command_text.clear();
                     self.command_text.insert(0, char);
                     self.set_mode(EditorMode::Command)?;
                 }

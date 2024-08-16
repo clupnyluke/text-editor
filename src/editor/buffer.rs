@@ -85,7 +85,7 @@ impl<'a> Buffer<'a> {
             ));
         }
         (*line).insert(column as usize, char);
-        stdout().queue(MoveRight(1))?;
+        terminal.move_right_for_insert(&self)?;
         screen::update_line(self, terminal, row)?;
         Ok(())
     }

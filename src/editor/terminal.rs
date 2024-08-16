@@ -74,10 +74,8 @@ impl Terminal {
         Ok(())
     }
 
-    pub fn goto_beginning_of_line(&mut self) -> IOResult {
-        execute!(stdout(), MoveToColumn(0))?;
-        self.virtual_cursor.0 = 0;
-        self.virtual_position.0 = 0;
+    pub fn goto_beginning_of_line(&mut self, buffer: &Buffer) -> IOResult {
+        self.goto(buffer, 0, self.virtual_cursor.1)?;
         Ok(())
     }
 
