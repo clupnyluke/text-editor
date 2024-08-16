@@ -25,13 +25,7 @@ impl<'a> Buffer<'a> {
     pub fn read_file(&mut self, file: Option<&'a String>) -> IOResult {
         self.file_path = file;
         if let Some(path) = file {
-            let mut contents = String::new();
-            let mut file = std::fs::OpenOptions::new()
-                .read(true)
-                .write(true)
-                .create(true)
-                .open(path)?;
-            file.read_to_string(&mut contents)?;
+            let contents = fs::read_to_string(path).expect("Can't open file");
             self.contents = contents.lines().map(|val| String::from(val)).collect();
         }
         Ok(())
@@ -140,8 +134,9 @@ impl<'a> Buffer<'a> {
         }
         let line = self.get_line(row).unwrap();
         let append_str = line.clone();
-        let line_upper = self.get_line_mut(i - 1).unwrap();
+        let line_upper = self.get_line_mut(row - 1).unwrap();
         (*line_upper).push_str(append_str.as_str());
+        Ok(())
     }
 
     pub fn insert_line(&mut self, row: usize, contents: String) -> IOResult {

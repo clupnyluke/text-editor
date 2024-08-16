@@ -113,8 +113,8 @@ impl Controller {
             KeyCode::Backspace => {
                 if x < 1 {
                     if y == 0 {
-                    return Ok(());
-                }
+                        return Ok(());
+                    }
                     terminal.goto(buffer, buffer.get_line(y - 1).unwrap().len(), y)?;
                     buffer.move_line_contents_up_one_row(y)?;
                     buffer.delete_line(y)?;
